@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Prototipo UI Adattiva - Pagina di Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        /* Stile per il banner che verrà mostrato/nascosto in base alla UI state */
+        #myBanner {
+            background-color: lightblue;
+            padding: 10px;
+            margin: 10px 0;
+            display: none;
+        }
+        /* Area per visualizzare i log di debug */
+        #debugLog {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+<h1>Prototipo UI Adattiva - Pagina di Test</h1>
+<!-- Elemento che rappresenta il banner gestito dal modulo UIController -->
+<div id="myBanner">Banner di Prova</div>
+<p>Interagisci con la pagina: clicca, scorri e osserva il log per vedere come evolve lo state.</p>
+<!-- Area per visualizzare i log in tempo reale -->
+<div id="debugLog">Log di Debug:</div>
+
+<!-- Caricamento del file principale che inizializza l'intero sistema -->
+<script type="module" src="./main.js"></script>
+</body>
+</html>
