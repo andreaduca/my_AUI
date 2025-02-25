@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "my-aui-frontend",
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
@@ -16,7 +16,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "@babel/preset-env": "^7.26.8",
     "jest": "^29.7.0",
