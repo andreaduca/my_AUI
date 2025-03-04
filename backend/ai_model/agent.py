@@ -7,11 +7,11 @@ from ai_model.dqrn_network import DQRN
 import json
 from preprocessing import FEATURE_VECTOR_LENGTH
 
-
 def load_actions():
     with open("actions.json", "r", encoding="utf-8") as f:
         data = json.load(f)
     return data
+
 
 ACTIONS = load_actions()
 OUTPUT_DIM = len(ACTIONS)

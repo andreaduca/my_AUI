@@ -2,6 +2,8 @@ import uuid
 
 from flask import request, jsonify, Flask
 from flask_cors import CORS
+
+from ai_model.agent import DQRNModel
 from db.sessions_repository import save_session, get_last_step, get_next_step
 from db.transitions_repository import get_transition, update_transition, save_transition
 from preprocessing import state_to_features
@@ -9,6 +11,8 @@ from reward import calculate_reward
 
 app = Flask(__name__)
 CORS(app)
+
+agent = DQRNModel(device = 'cpu')
 
 @app.route('/createSession', methods=['POST'])
 def create_session():
