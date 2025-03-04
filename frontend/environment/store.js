@@ -30,7 +30,7 @@ export function updateState(newState) {
     };
     // Verifica se la parte UI è cambiata (confronto shallow)
     if (!shallowEqual(prevUIState, state.ui)) {
-        // Notifica tutti i subscriber solo se la componente UI è stata modificata
+        // Lo stato dela UI e' cambiato, quindi va sincronizzato il DOM
         subscribers.forEach(callback => callback(state));
     }}
 

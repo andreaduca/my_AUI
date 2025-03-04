@@ -1,14 +1,9 @@
-/*
-  Defines the initial state object
- */
-
 export const initialState = {
 
     // UI state
     ui: {
         myBanner: {
             show: false,
-            variant: 'default'
         },
     },
 
@@ -30,10 +25,10 @@ export const initialState = {
     }
 };
 
+const HOST = 'http://localhost:5020'
+
 export const CONFIG = {
-    // TODO: set host const
-    getActionUrl: 'http://localhost:5020/getAction',
-    createSessionUrl: 'http://localhost:5020/createSession',
-    addToTransitionUrl: 'http://localhost:5020/addToTransition',
-    monitoredEvents: ['click', 'scroll', 'mouseover']
+    getActionUrl: HOST+'/getAction',
+    createSessionUrl: HOST+'/createSession',
+    addToTransitionUrl: HOST+'/addToTransition',
 };

@@ -1,5 +1,4 @@
 export class ClickEvent {
-    // TODO: implement class events
     constructor({ elementId, targetUrl = null, erroneous = false, timestamp = Date.now() }) {
         this.type = 'CLICK';
         this.elementId = elementId;

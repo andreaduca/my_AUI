@@ -91,7 +91,7 @@ describe('Store Module', () => {
         expect(stateBefore.ui.myBanner.show).toBe(false);
 
         // Aggiorna la UI: cambia myBanner.show a true
-        updateState({ ui: { myBanner: { show: true, variant: 'default' } } });
+        updateState({ ui: { myBanner: { show: true} } });
 
         // Il subscriber dovrebbe essere notificato
         expect(callback).toHaveBeenCalled();

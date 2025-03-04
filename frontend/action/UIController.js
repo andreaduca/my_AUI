@@ -16,10 +16,6 @@ export function hideBanner() {
     }
 }
 
-/**
- * Applies the `ui` state to the interface:
- * if ui.myBanner.show === true, show the banner, otherwise hide it.
- */
 export function applyUIState(state) {
     if (state.ui.myBanner.show) {
         showBanner();

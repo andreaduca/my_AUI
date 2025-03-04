@@ -1,7 +1,3 @@
-/*
-  This file contains functions to communicate with the backend.
- */
-
 import {CONFIG} from "./config.js";
 
 export async function getAction(state) {
