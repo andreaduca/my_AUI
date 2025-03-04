@@ -16,7 +16,6 @@ coverage
 /cypress/videos/
 /cypress/screenshots/
 /backend/.venv
-/prova_app
 
 # Editor directories and files
 .vscode/*

@@ -14,7 +14,7 @@ export const initialState = {
 
     // User state and reactions
     user: {
-        action: null,   // TODO: oggetto che modella evento
+        lastInteractions: [],
         timeFromLastAction: 0,
         timeOnPage: 0,
         clicksCount: 0,
