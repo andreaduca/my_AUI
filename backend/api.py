@@ -4,6 +4,7 @@ from flask import request, jsonify, Flask
 from flask_cors import CORS
 from db.sessions_repository import save_session, get_last_step, get_next_step
 from db.transitions_repository import get_transition, update_transition, save_transition
+from preprocessing import state_to_features
 from reward import calculate_reward
 
 app = Flask(__name__)
@@ -46,6 +47,14 @@ def add_to_transition():
 
     return jsonify({"status": "ok", "message": "Transition added and updated successfully"})
 
+@app.post("/getAction")
+def get_action():
+
+    row_state = request.get_json()
+    features = state_to_features(row_state)
+    action = agent.select_action(features)
+
+    return {"action": action}
 
 @app.route("/", methods=['GET'])
 def startApp():
