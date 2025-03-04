@@ -1,9 +1,8 @@
 import {updateState} from "../environment/store";
 
-const Actions  = Object.freeze({
-    SHOW_BANNER: "SHOW_BANNER",
-    HIDE_BANNER: "HIDE_BANNER"
-});
+import jsonData from "../../actions.json" assert { type: "json" };
+
+const Actions = Object.freeze(jsonData);
 
 export function applyAction(state, action) {
     // TODO: if I have more component in state, action is a list of actions, and I have to apply this action for each component

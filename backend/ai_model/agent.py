@@ -4,28 +4,43 @@ import torch
 from torch import optim, nn
 
 from ai_model.dqrn_network import DQRN
+import json
+from preprocessing import FEATURE_VECTOR_LENGTH
 
-# TODO: global constants
+
+def load_actions():
+    with open("actions.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data
+
+ACTIONS = load_actions()
+OUTPUT_DIM = len(ACTIONS)
+
+NUM_FEATURES = 7
+HIDDEN_DIM = 16
+INPUT_DIM = FEATURE_VECTOR_LENGTH
+
 LR = 1e-3
 GAMMA = 0.99
 EPSILON = 0.1
 
 class DQRNModel:
-    def __init__(self, input_dim, hidden_dim, num_actions, device='cpu'):
+    def __init__(self, device='cpu'):
         """
         input_dim: feature vector dimension
         hidden_dim: LSTM hidden state dimension
         num_actions: how many actions the agent can take
         device: 'cpu' or 'cuda'
         """
+        self.gamma = GAMMA
         self.hidden = None  # (h, c) => initial hidden state
-        self.num_actions = num_actions
+        self.num_actions = OUTPUT_DIM
         self.device = device
 
-        self.online_net = DQRN(input_dim, hidden_dim, num_actions).to(device)
+        self.online_net = DQRN(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM).to(device)
 
         # Target network with the same architecture, to stabilize learning
-        self.target_net = DQRN(input_dim, hidden_dim, num_actions).to(device)
+        self.target_net = DQRN(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM).to(device)
         self.target_net.load_state_dict(self.online_net.state_dict())
         self.target_net.eval()
 
@@ -60,7 +75,7 @@ class DQRNModel:
                 action_idx = q_values.argmax(dim=1).item()
 
         # 4. mapping index to an action name
-        return Actions[action_idx]
+        return ACTIONS[action_idx]
 
     def update(self, batch, target_update=False):
         """

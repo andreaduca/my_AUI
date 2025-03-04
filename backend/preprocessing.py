@@ -24,7 +24,7 @@ def state_to_features(state):
     scroll_depth_norm = scroll_depth / 100.0
 
     # Boolean -> 1.0 / 0.0
-    my_banner_show = ui_data.get("myBanner").get("show")
+    my_banner_show = ui_data.get("myBanner", {}).get("show", False)
     show_feature = 1.0 if my_banner_show else 0.0
 
     # Categorical (deviceType)
@@ -44,3 +44,5 @@ def state_to_features(state):
     ]
 
     return features
+
+FEATURE_VECTOR_LENGTH = len(state_to_features({}))
