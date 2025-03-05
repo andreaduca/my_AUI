@@ -17,12 +17,12 @@ export async function startAdaptiveProcess() {
 
         // TODO: ask for action in a smarter way?
         setInterval(async () => {
-            const action = await getAction(getState());
-            if (action) {
-                applyAction(getState(), action);
+            const actionIndex = await getAction(getState());
+            if (actionIndex != null) {
+                applyAction(getState(), actionIndex);
             }
             // TODO: If I discriminate events, I can set done=true for end episode events
-            await addToTransition(getState(), action);
+            await addToTransition(getState(), actionIndex);
             console.log('NEW state', getState())
         }, 5000); // ogni 5 secondi
     } catch (error) {

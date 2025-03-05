@@ -5,7 +5,8 @@ from torch import optim, nn
 
 from ai_model.dqrn_network import DQRN
 import json
-from preprocessing import FEATURE_VECTOR_LENGTH
+from preprocessing import FEATURE_VECTOR_LENGTH, state_to_features
+
 
 def load_actions():
     with open("actions.json", "r", encoding="utf-8") as f:
@@ -76,8 +77,7 @@ class DQRNModel:
                 action_idx = q_values.argmax(dim=1).item()
                 print(q_values)
 
-        # 4. mapping index to an action name
-        return ACTIONS_LIST[action_idx]
+        return action_idx
 
     def update(self, batch, target_update=False):
         """
@@ -123,10 +123,10 @@ class DQRNModel:
         next_states = []
         dones = []
         for (s, a, r, s_next, d) in batch:
-            states.append(s)
+            states.append(state_to_features(s))
             actions.append(a)
             rewards.append(r)
-            next_states.append(s_next)
+            next_states.append(state_to_features(s_next))
             dones.append(d)
         states = torch.tensor(states, dtype=torch.float32, device=self.device)  # shape => [B, input_dim]
         next_states = torch.tensor(next_states, dtype=torch.float32, device=self.device)
