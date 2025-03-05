@@ -4,6 +4,7 @@ from flask import request, jsonify, Flask
 from flask_cors import CORS
 
 from ai_model.agent import DQRNModel
+from ai_model.trainer import WebTrainer
 from db.sessions_repository import save_session, get_last_step, get_next_step
 from db.transitions_repository import get_transition, update_transition, save_transition
 from preprocessing import state_to_features
@@ -13,6 +14,9 @@ app = Flask(__name__)
 CORS(app)
 
 agent = DQRNModel(device = 'cpu')
+agent.load_weights(folder_path="./saved_weights", file_name="model_weights.pt")
+
+web_trainer = WebTrainer(agent)
 
 @app.route('/createSession', methods=['POST'])
 def create_session():
@@ -26,7 +30,6 @@ def create_session():
 def add_to_transition():
     data = request.get_json()
     current_state = data.get("state", {})
-    # features = state_to_features(current_state)
     session_id = current_state.get("context", {}).get("sessionId")
     action = data.get("action", None)
     done = data.get("done", False)
@@ -42,8 +45,8 @@ def add_to_transition():
             "status": "complete",
         }
         transition_completed = update_transition(last_transition, updating)
-        # trainer.handle_transition(transition_completed)
         print("Completed transition step_id=%d" % last_transition["step_id"])
+        web_trainer.handle_transition(transition_completed)
 
     next_step = get_next_step(session_id)
     save_transition(session_id, next_step, current_state, action, done = done)

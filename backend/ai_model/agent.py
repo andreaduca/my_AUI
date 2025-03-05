@@ -1,4 +1,6 @@
+import os
 import random
+import time
 
 import torch
 from torch import optim, nn
@@ -143,16 +145,34 @@ class DQRNModel:
         """ Resets the internal state of the LSTM (useful at the beginning of the episode or session)."""
         self.hidden = None
 
-    def save_weights(self, path, overwrite=True):
-        # TODO: timestep in the filename yes/no? How to load it next?
-        if not overwrite:
-            import time
-            timestamp = int(time.time())
-            path = f"{path}_{timestamp}.pt"
-        torch.save(self.online_net.state_dict(), path)
+    def save_weights(self, folder_path, overwrite=True):
+        # Crea la cartella se non esiste
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
 
-    def load_weights(self, path):
+        if not overwrite:
+            timestamp = int(time.time())
+            file_name = f"model_weights_{timestamp}.pt"
+        else:
+            file_name = "model_weights.pt"
+
+        path = os.path.join(folder_path, file_name)
+        torch.save(self.online_net.state_dict(), path)
+        print(f"Pesi salvati in: {path}")
+
+
+    def load_weights(self, folder_path, file_name="model_weights.pt"):
+        """
+        Carica i pesi del modello dal file specificato.
+        Se il file non esiste, stampa un messaggio e continua senza caricare pesi.
+        """
+        path = os.path.join(folder_path, file_name)
+        if not os.path.exists(path):
+            print(f"Il file {path} non esiste. Avvio il training da zero.")
+            return
+
         state_dict = torch.load(path, map_location=self.device)
         self.online_net.load_state_dict(state_dict)
         self.target_net.load_state_dict(state_dict)
+        print(f"Pesi caricati da: {path}")
 
