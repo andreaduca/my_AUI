@@ -57,6 +57,7 @@ def get_action():
     row_state = request.get_json()
     features = state_to_features(row_state)
     action = agent.select_action(features)
+    print("action: ",action)
 
     return {"action": action}
 

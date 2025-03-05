@@ -14,6 +14,7 @@ def load_actions():
 
 
 ACTIONS = load_actions()
+ACTIONS_LIST = list(ACTIONS.values())
 OUTPUT_DIM = len(ACTIONS)
 
 NUM_FEATURES = 7
@@ -73,9 +74,10 @@ class DQRNModel:
                 # 3. Argmax to find the index of the action with the largest Q-value
                 # TODO: if the banner is already shown, don't show it again
                 action_idx = q_values.argmax(dim=1).item()
+                print(q_values)
 
         # 4. mapping index to an action name
-        return ACTIONS[action_idx]
+        return ACTIONS_LIST[action_idx]
 
     def update(self, batch, target_update=False):
         """
