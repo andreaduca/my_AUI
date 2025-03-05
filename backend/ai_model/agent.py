@@ -7,7 +7,7 @@ from torch import optim, nn
 
 from ai_model.dqrn_network import DQRN
 import json
-from preprocessing import FEATURE_VECTOR_LENGTH, state_to_features
+from ai_model.preprocessing import FEATURE_VECTOR_LENGTH, state_to_features
 
 
 def load_actions():
