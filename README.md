@@ -1,6 +1,8 @@
 Il progetto 'my_AUI' è il risultato della ristrutturazione generale di un progetto aziendale ('ReinfrceWeb'). Qui è riportato il mio lavoro di analisi del software sull'implementazione proposta dall'azienda.
+
+# Analisi del Software proposto dall'azienda  
  
-# Obiettivi del progetto  
+## Obiettivi del progetto  
 
 - **Universalità** – il sistema deve rimanere plug-and-play per qualunque web-app, senza dipendenze di dominio.  
 - **Predizione** – stimare in tempo reale l’evoluzione del comportamento dell’utente.  
@@ -8,19 +10,19 @@ Il progetto 'my_AUI' è il risultato della ristrutturazione generale di un proge
 
 ---
 
-# Funzionamento  
+## Funzionamento  
 
 1. **Osservazione** – raccolta dello stato corrente dell’interfaccia e delle interazioni dell’utente.  
 2. **Pre-processamento** – costruzione del vettore di feature e della transizione, e calcolo della *reward*.  
 3. **Elaborazione LSTM** – trasforma la sequenza degli stati recenti in un vettore compatto che contestualizza allo storico l'informazione attuale.
 4. **DQN-RNN** – valutazione dei Q-values per orientare la scelta.  
 5. **ε-greedy** – strategia di decisione.  
-6. **Aggiornamento periodico** – per tenere aggiornato il modello al contesto corrente.  
+6. **Aggiornamento periodico** – per tenere aggiornato il modello al contesto corrente.
+
+
+<img width="858" alt="Screenshot 2025-04-29 at 11 09 31" src="https://github.com/user-attachments/assets/266ce176-afd3-41bb-a367-1c6cfb2ae246" />
 
 ---
-
-# Analisi del Software proposto dall'azienda  
-
 ## Lo stato osservato  
 ![Screenshot 2025-04-26 at 17 31 14](https://github.com/user-attachments/assets/1018b83f-d76d-4985-846b-fa9d7ed6cab1)
 
@@ -28,14 +30,12 @@ Ogni “osservazione” ingloba **cinque secondi consecutivi** (array da 5 voci 
 
 
 > **Nota sul passo temporale (MDP)**  
-> In un Markov Decision Process ogni iterazione segue il ciclo  
-> `s_t → a_t → r_{t+1}, s_{t+1}`: l’agente osserva **un solo stato** alla volta,
+> In un Markov Decision Process ogni iterazione segue il ciclo `s_t → a_t → r_{t+1}, s_{t+1}`: l’agente osserva **un solo stato** alla volta,
 > prende **una sola azione** e, alla stessa frequenza, riceve ricompensa e nuovo
-> stato. Accorpare i 5 secondi consecutivi in un’unica osservazione trasforma
-> implicitamente il passo dell’MDP da 1 s a 5 s senza che il resto
-> dell’ambiente lo sappia. Ne derivano:
+> stato. Accorpare i 5 secondi consecutivi in un’unica osservazione, ma poi considerare
+> nel processamento i singoli secondi, determina:
 >
-> 1. **Granularità di controllo ridotta** – l’agente può correggersi solo ogni 5 s, perdendo eventi intermedi.  
+> 1. **Granularità di controllo ridotta** – l’agente può correggersi solo ogni 5 s, perdendo eventi intermedi, sebbene vengano comunque osservati.  
 > 2. **Credit assignment più difficile** – quando arriva una reward è ambiguo capire quale dei 5 istanti l’abbia causata.  
 > 3. **Pre-processing complesso** – padding e reshaping servono solo per “spacchettare” il mini-batch interno, complicando la pipeline.
 >
@@ -43,9 +43,7 @@ Ogni “osservazione” ingloba **cinque secondi consecutivi** (array da 5 voci 
 > - inviare un solo frame per step e lasciare alla rete LSTM la memoria del passato, **oppure**
 > - usare un *frame stacking* scorrevole (`t-3 … t`) ma mantenendo comunque il passo logico di 1 s.
 
-La struttura JSON è ridondante: un oggetto radice con chiave `body`, che contiene a sua volta un altro `body`, più due copie di `user_id`. Questa annidazione superflua complica il parsing e rende poco intuitivo lo schema dei dati; in un’API REST ben progettata basterebbe un livello e nomi univoci.  
-
-Inoltre l’agente continua a **non ricevere variabili manipolabili**: il vettore di stato è interamente “passivo”. Il risultato è un apprendimento lento, perché l’effetto di un’azione (p. es. mostrare un banner) non è immediatamente riflesso nei dati d’ingresso e va dedotto a posteriori. Bastava includere nel payload un flag “banner on/off” o simili per ridurre la *credit assignment*.  
+Inoltre l’agente continua a **non ricevere variabili manipolabili**: il vettore di stato è interamente “passivo”. Il risultato è un apprendimento lento, perché l’effetto di un’azione (p. es. mostrare un banner) non è immediatamente riflesso nei dati d’ingresso e va dedotto a posteriori. L'agente non è in grado di osservare dei cambiamenti nello stato coerenti alle sue azioni. Bastava includere nel payload un flag “banner on/off” o simili per ridurre la *credit assignment*.  
 
 
 ## Sul Pre-Processamento  
@@ -63,25 +61,89 @@ La funzione `convert_to_tuples()` riordina le liste e le concatena, ma non scala
 
 Il tracciamento degli eventi utente è interamente incastonato dentro **HomeView.vue**: il componente, oltre a gestire la logica della pagina, si occupa anche di tutta la logica del sistema, tra cui la raccolta di tap, scroll, zoom, reward e di l'invio al backend. Così la sezione grafica e il codice di tracciamento si mescolano e diventano difficili da separare; qualunque refactor grafico costringerà a toccare anche la logica di raccolta dati. Un composable dedicato isolerebbe gli handler e renderebbe il componente di pagina più snello.
 
-Gli *event listener* ad `addEventListener` sono staccati nello `beforeDestroy`, ma il codice richiama di nuovo `addEventListener` anziché `removeEventListener`, lasciando gli handler vivi tra mount successivi e causando **memory-leak**; lo stesso vale per gli `interval` (1 s per `updateArray`, 5 s per `getResponse`) che non vengono mai cancellati. Nelle SPA, ogni volta che l’utente entra ed esce dal componente viene creato un nuovo setInterval; col passare delle navigazioni si accumulano decine di timer attivi che continuano a inviare richieste ripetute al backend.
+Gli *event listener* ad `addEventListener` sono staccati nello `beforeDestroy`, ma il codice richiama di nuovo `addEventListener` anziché `removeEventListener` su _window_, lasciando l'handler vivo tra mount successivi e causando **memory-leak**; lo stesso vale per gli `interval` (1 s per `updateArray`, 5 s per `getResponse`) che non vengono mai cancellati. Nelle SPA, ogni volta che l’utente entra ed esce dal componente viene creato un nuovo setInterval; col passare delle navigazioni si accumulano decine di timer attivi che continuano a inviare richieste ripetute al backend.
+
+```js
+// HomeView.vue  – estratto semplificato
+mounted() {
+  document.body.addEventListener('click',  this.handleTap);
+  document.body.addEventListener('touchstart', this.handleTap);
+  window.addEventListener('scroll', this.handleScroll);
+// ...
+  // Timer creati ma mai salvati né azzerati
+  setInterval(() => updateArray(this.events), 1000);
+  this.findActionInterval = setInterval(() => this.getResponse(), 5000);
+},
+
+beforeDestroy() {
+  document.body.removeEventListener('click', this.handleTap);
+  document.body.removeEventListener('touchstart', this.handleTap);
+  /* (X) Qui l'handler viene aggiunto di nuovo invece di essere rimosso come i precedenti */
+  window.addEventListener('scroll', this.handleScroll);
+  /* (X) Nessun clearInterval() → i timer restano attivi dopo l’unmount */
+}
+```
 
 Gli array con lo storico (`scrollUpContainer`, `clickContainer` …) crescono a oltranza, sebbene il payload utilizzi solo `slice(-5)`: basta qualche minuto di permanenza per accumulare migliaia di elementi inutili, con impatto su memoria e GC. Un ring-buffer (lunghezza fissa 5) risolverebbe il problema mantenendo costante l’impronta RAM.
+```bash
+// Log della console
+[00:05] scrollUpContainer length = 5
+[01:00] scrollUpContainer length = 305
+[03:00] scrollUpContainer length = 1 073
+```
 
 Nel markup il banner usa `v-if="true"`, quindi `this.banner` è ignorato, e gli input hanno l’attributo inesistente `@model` al posto di `v-model`; la UI appare reattiva ma i dati non viaggiano davvero fra DOM e stato, generando bug “silenziosi” che emergono solo in debug.
 
+```vue
+    <div class="banner" v-if="true"> <!-- this.banner-->
+      <div class="banner-shape" :class="{ 'disappear' : this.disappearBanner  }">
+        <div class="like">
+        <input id="like" type="radio" @model="reward" name="reward" @change="e => checkReward(e)" value="2" hidden/>
+        <label for="like">
+[...]
+```
 ---
 
-**apiData.js** gestisce i container fuori dal sistema di reattività Vue; aperte due schede, le statistiche di una confluiscono nell’altra, falsando i dati. Inoltre `deviceContainer` viene fissato al primo secondo e non cambia se l’utente ruota lo schermo, per cui il modello non percepisce il passaggio da portrait a landscape.
+**apiData.js** gestisce i container fuori dal sistema di reattività Vue; aperte due schede, le statistiche di entrambe confluiscono nello stesso container. Ciò falsifica i dati: le sessioni si contaminano, i conteggi esplodono e il modello riceve dati che non rappresentano più alcun utente reale.
+
+```js
+// variabili globali del modulo
+const scrollUpContainer = [];
+const clickContainer   = [];
+…
+export const updateArray = (events) => {
+  scrollUpContainer.push(events.scrollUpDistance);
+  clickContainer.push(events.taps);
+}
+```
+
+Inoltre `deviceContainer` viene fissato al primo secondo e non cambia se l’utente ruota lo schermo, per cui il modello non percepisce il passaggio da portrait a landscape.
 
 Il polling su `/optimize_model` è lanciato dal browser ogni 10 s (controllo su `timeContainer.slice(-1) % 10`), ma il retraining dovrebbe essere decisione del server: altrimenti basta aprire la console del dev-tools e lasciare la tab aperta per saturare la GPU del backend.  
 
 La funzione `parseJSON()` esegue un doppio `JSON.parse(JSON.parse(...))`: oltre a essere inutile, raddoppia il costo CPU e rischia di alzare un’eccezione su payload più grandi. L’endpoint API è hard-coded su `http://localhost:5020`; in un deploy cloud occorre ricompilare l’intera app per cambiare host, quando bastava una variabile d’ambiente (`import.meta.env.VITE_API_URL`).
 
+```js
+// Api.js – estratto semplificato
+
+const proxy = 'http://localhost:5020'      //  host hard-coded
+
+function parseJSON(text) {                 //  doppio JSON.parse superfluo e costoso
+  try {
+    //            ↓ prima serializza di nuovo                ↓ poi parse del parse
+    let dataTmp = text && JSON.parse(JSON.parse(JSON.stringify(text.trim())))
+    return dataTmp
+  } catch (err) {
+    return text                            // se il payload è grande qui può generare un’eccezione
+  }
+}
+```
+
 ---
 
 ### Effetti pratici  
 
-* **FPS in caduta**: array che crescono + handler fantasma ⇒ rendering meno fluido dopo qualche minuto.  
+* **Calo di FPS**: array che crescono + handler fantasma ⇒ rendering meno fluido dopo qualche minuto.  
 * **Rete intasata**: una sessione di 15 min genera ~900 call di telemetria e ~20 retrain; su mobile significa consumare banda e batteria.  
 * **Dati poco affidabili/significativi**: lo scroll viene accumulato e non indica una posizione nella pagina, si sommano anche i click su elementi non cliccabili della pagina, il device non cambia mai.
 
@@ -99,11 +161,15 @@ Di fatto, la “demo” trascina con sé l’intero SDK: senza clonare HomeView.
 
 ## Back-End (`api.py`)  
 
-Il backend accorpa in un solo file (`api.py`) oltre 500 righe che comprendono routing, business logic, accesso al DB e training. Le query SQL sono scritte “a stringa”, sparpagliate tra le funzioni, senza DAO né ORM: mantenere la persistenza (o prevenirne le SQL-injection) diventa arduo. Variabili globali mutabili (`policy_net`, liste di stato, checkpoint) convivono in un contesto multi-thread.  
+Il backend accorpa in un solo file (`api.py`) oltre 500 righe che comprendono routing, business logic, accesso al DB e training. Le query SQL sono scritte “a stringa”, sparpagliate tra le funzioni, senza DAO né ORM: mantenere la persistenza (o prevenirne le SQL-injection) diventa arduo. Variabili globali mutabili (`policy_net`, liste di stato, checkpoint) convivono in un contesto multi-thread: quando l’app gira con più worker o thread questi dati condivisi possono essere aggiornati in parallelo, generando condizioni di gara e risultati incoerenti.
 
 In più, il training RL avviene sincrono dentro un endpoint `GET /optimize_model/<lastOptimization>`: ogni richiesta blocca il thread finché PyTorch non ha finito. Il tempo di risposta diventa imprevedibile e la pagina rischia il timeout; ad esempio una coda Celery avrebbe risolto il problema spostando il carico computazionale fuori dal ciclo HTTP.  
 
+<img width="942" alt="Screenshot 2025-04-29 at 11 22 45" src="https://github.com/user-attachments/assets/7f47d5ee-ddba-4e3c-9350-b469aecda16f" />
+
+
 Hard-coding di percorsi (`Database_Utenti`, `model_checkpoints`) e nessuna variabile d’ambiente violano il *twelve-factor*; l’API restituisce lo stack-trace interno al client, esponendo dettagli del server. Infine, il salvataggio dei pesi ad ogni “miglioramento” (basato sulla somma reward degli ultimi 10 step) produce decine di file quasi identici, I/O elevato e versioning confuso.  
+
 
 ---
 
